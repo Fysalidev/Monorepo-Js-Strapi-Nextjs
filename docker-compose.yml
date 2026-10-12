@@ -1,0 +1,61 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      HOST: 0.0.0.0
+      PORT: 1337
+      APP_KEYS: ${APP_KEYS:-toBeModified1,toBeModified2}
+      API_TOKEN_SALT: ${API_TOKEN_SALT:-tobemodified}
+      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET:-tobemodified}
+      TRANSFER_TOKEN_SALT: ${TRANSFER_TOKEN_SALT:-tobemodified}
+      JWT_SECRET: ${JWT_SECRET:-tobemodified}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-tobemodified}
+    volumes:
+      - strapi_uploads:/opt/app/public/uploads
+      - strapi_data:/opt/app/.tmp
+    networks:
+      - app-network
+    expose:
+      - "1337"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # URL publique (derrière Nginx), embarquée dans le bundle client
+        NEXT_PUBLIC_STRAPI_URL: ${STRAPI_PUBLIC_URL:-http://localhost}
+    restart: unless-stopped
+    environment:
+      STRAPI_INTERNAL_URL: http://backend:1337
+      NEXT_PUBLIC_STRAPI_URL: ${STRAPI_PUBLIC_URL:-http://localhost}
+    networks:
+      - app-network
+    expose:
+      - "3000"
+    depends_on:
+      - backend
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - app-network
+    depends_on:
+      - frontend
+      - backend
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  strapi_uploads:
+  strapi_data:
