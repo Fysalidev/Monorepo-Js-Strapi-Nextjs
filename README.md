@@ -42,44 +42,6 @@ Starter monorepo prêt à l'emploi : frontend **Next.js 15** (App Router, TypeSc
 
 Copiez les fichiers `.env.example` en `.env` / `.env.local` et ajustez les valeurs.
 
-## Déploiement en conteneurs (Docker + Nginx)
-
-La stack complète tourne en conteneurs sur un réseau Docker interne, derrière un reverse proxy **Nginx** :
-
-- `/` → frontend Next.js (`frontend:3000`)
-- `/api`, `/admin`, `/uploads`, `/documentation` → backend Strapi (`backend:1337`)
-
-### Prérequis
-
-- Docker + Docker Compose v2
-
-### Lancement
-
-```bash
-cp backend/.env.example backend/.env   # puis générez de vraies clés
-docker compose up -d --build
-```
-
-L'application est disponible sur http://localhost (port 80) :
-
-- Frontend : http://localhost
-- Admin Strapi : http://localhost/admin
-- API : http://localhost/api/articles
-
-### Configuration
-
-- `STRAPI_PUBLIC_URL` (défaut : `http://localhost`) : URL publique exposée par Nginx, embarquée dans le bundle client Next.js.
-- Les appels serveur-vers-serveur du frontend utilisent l'URL interne `http://backend:1337` (réseau Docker), configurable via `STRAPI_INTERNAL_URL`.
-- Secrets Strapi (`APP_KEYS`, `JWT_SECRET`, …) : à définir dans `backend/.env` ou l'environnement du compose.
-- Les uploads et la base SQLite sont persistés dans les volumes `strapi_uploads` et `strapi_data`.
-
-### Fichiers
-
-- `backend/Dockerfile` — image Strapi multi-stage (Node 22 alpine)
-- `frontend/Dockerfile` — image Next.js en mode standalone
-- `nginx/default.conf` — reverse proxy Nginx
-- `docker-compose.yml` — orchestration des 3 services sur le réseau `app-network`
-
 ## Déploiement
 
 ### Frontend → Vercel
